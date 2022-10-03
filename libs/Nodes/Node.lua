@@ -19,17 +19,22 @@ end
 
 Node.Enum = Object:extend()
 
+local Id = 0
+
 function Node.Enum:initialize(Options)
 	for _, v in pairs(Options) do
-		local Id = newproxy()
+		Id = Id + 1
+
+		print(v, Id)
+
 		local Value = setmetatable({}, {
 			__eq = EqualityCheck,
 			__id = Id,
-			__call = function(_, Values)
+			__call = function(t, Values)
 				if getmetatable(Values) == nil then
-					return Node.EnumValue:new(Id, { Value = Values })
+					return Node.EnumValue:new(getmetatable(t).__id, Values)
 				else
-					return Node.EnumValue:new(Id, Values)
+					return Node.EnumValue:new(getmetatable(t).__id, { Value = Values })
 				end
 			end
 		})
