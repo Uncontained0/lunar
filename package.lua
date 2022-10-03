@@ -1,5 +1,5 @@
 return {
-	name = "lunar",
+	name = "luna-lua/lunar",
 	version = "0.0.1",
 	description = "A lua parser",
 	tags = { "lua", "luna", "parser", "tokenizer", "ast" },
