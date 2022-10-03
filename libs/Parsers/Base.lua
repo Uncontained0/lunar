@@ -1,6 +1,6 @@
-local Parser = require("./Parser")
-local BaseNodes = require("../Nodes/Base")
-local UtilNodes = require("../Nodes/Util")
+local Parser = require("Parsers/Parser")
+local BaseNodes = require("Nodes/Base")
+local UtilNodes = require("Nodes/Util")
 
 local BIN_OPS = {
 	"And",
@@ -153,12 +153,14 @@ end
 function Base:Field()
 	if self:Next("LeftBracket") then
 		local LeftBracket = self:Consume()
+		local NameExpression = self:Expression()
+		local RightBracket = self:Symbol("RightBracket")
 		local Equals = self:Symbol("Equals")
 		local Expression = self:Expression()
-		local RightBracket = self:Symbol("RightBracket")
 
 		return BaseNodes.Field.Bracket({
 			Brackets = UtilNodes.Pair:new(LeftBracket, RightBracket),
+			NameExpression = NameExpression,
 			Equals = Equals,
 			Expression = Expression,
 		})
@@ -275,7 +277,7 @@ function Base:NumericFor()
 
 	local Do = self:Symbol("Do")
 	table.insert(self.LoopStack, {})
-	local Block = self:Block()
+	local Body = self:Block()
 	local Breaks = table.remove(self.LoopStack)
 	local End = self:Symbol("End")
 
@@ -289,7 +291,7 @@ function Base:NumericFor()
 		EndStepCommma = EndStepComma,
 		StepExpression = StepExpression,
 		Do = Do,
-		Block = Block,
+		Body = Body,
 		Breaks = Breaks,
 		End = End,
 	})
@@ -326,7 +328,7 @@ function Base:GenericFor()
 
 	local Do = self:Symbol("Do")
 	table.insert(self.LoopStack, {})
-	local Block = self:Block()
+	local Body = self:Block()
 	local Breaks = table.remove(self.LoopStack)
 	local End = self:Symbol("End")
 
@@ -336,7 +338,7 @@ function Base:GenericFor()
 		In = In,
 		Expressions = Expressions,
 		Do = Do,
-		Block = Block,
+		Body = Body,
 		Breaks = Breaks,
 		End = End,
 	})
@@ -346,28 +348,28 @@ function Base:If()
 	local If = self:Symbol("If")
 	local Condition = self:Expression()
 	local Then = self:Symbol("Then")
-	local IfBlock = self:Block()
+	local IfBody = self:Block()
 	local ElseIfs = {}
 
 	while self:Next("ElseIf") do
 		local ElseIf = self:Consume()
 		local ElseIfCondition = self:Expression()
 		local ElseIfThen = self:Symbol("Then")
-		local ElseIfBlock = self:Block()
+		local ElseIfBody = self:Block()
 
 		ElseIfs[#ElseIfs + 1] = BaseNodes.ElseIf:new({
 			ElseIf = ElseIf,
 			Condition = ElseIfCondition,
 			Then = ElseIfThen,
-			Block = ElseIfBlock,
+			Body = ElseIfBody,
 		})
 	end
 
-	local Else, ElseBlock
+	local Else, ElseBody
 
 	if self:Next("Else") then
 		Else = self:Consume()
-		ElseBlock = self:Block()
+		ElseBody = self:Block()
 	end
 
 	local End = self:Symbol("End")
@@ -376,10 +378,10 @@ function Base:If()
 		If = If,
 		Condition = Condition,
 		Then = Then,
-		Block = IfBlock,
+		Body = IfBody,
 		ElseIfs = ElseIfs,
 		Else = Else,
-		ElseBlock = ElseBlock,
+		ElseBody = ElseBody,
 		End = End,
 	})
 end
@@ -399,7 +401,7 @@ function Base:While()
 	local Condition = self:Expression()
 	local Do = self:Symbol("Do")
 	table.insert(self.LoopStack, {})
-	local Block = self:Block()
+	local Body = self:Block()
 	local Breaks = table.remove(self.LoopStack)
 	local End = self:Symbol("End")
 
@@ -407,7 +409,7 @@ function Base:While()
 		While = While,
 		Condition = Condition,
 		Do = Do,
-		Block = Block,
+		Body = Body,
 		Breaks = Breaks,
 		End = End,
 	})
@@ -424,7 +426,7 @@ function Base:Repeat()
 	return BaseNodes.Repeat:new({
 		Repeat = Repeat,
 		Block = Block,
-		Breaks = Breaks,
+		Body = Body,
 		Until = Until,
 		Condition = Condition,
 	})
@@ -484,9 +486,7 @@ function Base:FunctionArgs()
 			}),
 		})
 	elseif self:Next("String") then
-		local String = self:Consume()
-
-		return BaseNodes.FunctionArgs.String(String)
+		return BaseNodes.FunctionArgs.String(self:Consume())
 	end
 
 	local Table = self:KeepGoing(self.Table)
