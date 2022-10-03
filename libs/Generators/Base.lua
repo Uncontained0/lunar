@@ -1,9 +1,5 @@
-local Core = require("core")
 local Generator = require("Generators/Generator")
-local BaseNodes = require("Nodes/BaseNodes")
-local Node = require("Nodes/Node")
-
-local Is = Core.instanceof
+local BaseNodes = require("Nodes/Base")
 
 local Base = Generator:extend()
 
@@ -414,6 +410,10 @@ end
 
 function Base:Statement(Statement)
 	local Output
+
+	print(getmetatable(BaseNodes.Statement.LocalAssignment).__id)
+	print(getmetatable(BaseNodes.Statement.LocalAssignment({})).__id)
+	print(getmetatable(Statement).__id)
 
 	if Statement == BaseNodes.Statement.Assignment then
 		Output = self:Assignment(Statement.Value)
