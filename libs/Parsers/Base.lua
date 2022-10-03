@@ -418,15 +418,15 @@ end
 function Base:Repeat()
 	local Repeat = self:Symbol("Repeat")
 	table.insert(self.LoopStack, {})
-	local Block = self:Block()
+	local Body = self:Block()
 	local Breaks = table.remove(self.LoopStack)
 	local Until = self:Symbol("Until")
 	local Condition = self:Expression()
 
 	return BaseNodes.Repeat:new({
 		Repeat = Repeat,
-		Block = Block,
 		Body = Body,
+		Breaks = Breaks,
 		Until = Until,
 		Condition = Condition,
 	})
