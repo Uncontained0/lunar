@@ -4,13 +4,12 @@ local Node = {}
 
 Node.EnumValue = Object:extend()
 
-local function EqualityCheck(self, other)
-	return getmetatable(self).__id == getmetatable(other).__id
+Node.EnumValue.meta.__eq = function(self, other)
+	return self.EnumValueId ~= nil and self.EnumValueId == Other.EnumValueId
 end
 
 function Node.EnumValue:initialize(Identifier, Values)
-	getmetatable(self).__eq = EqualityCheck
-	getmetatable(self).__id = Identifier
+	self.EnumValueId = Identifier
 
 	for i, v in pairs(Values) do
 		self[i] = v
@@ -25,21 +24,7 @@ function Node.Enum:initialize(Options)
 	for _, v in pairs(Options) do
 		Id = Id + 1
 
-		print(v, Id)
-
-		local Value = setmetatable({}, {
-			__eq = EqualityCheck,
-			__id = Id,
-			__call = function(t, Values)
-				if getmetatable(Values) == nil then
-					return Node.EnumValue:new(getmetatable(t).__id, Values)
-				else
-					return Node.EnumValue:new(getmetatable(t).__id, { Value = Values })
-				end
-			end
-		})
-
-		self[v] = Value
+		self[v] = Node.EnumValue:new(Id, {})
 	end
 end
 
