@@ -480,10 +480,7 @@ function Base:FunctionArgs()
 
 		return BaseNodes.FunctionArgs.Paren({
 			Arguments = Arguments,
-			Parens = UtilNodes.Pair:new({
-				Left = LeftParen,
-				Right = RightParen,
-			}),
+			Parens = UtilNodes.Pair:new(LeftParen, RightParen),
 		})
 	elseif self:Next("String") then
 		return BaseNodes.FunctionArgs.String(self:Consume())
@@ -576,10 +573,7 @@ function Base:FunctionBody()
 		Body = Body,
 		Returns = Returns,
 		End = End,
-		Parens = UtilNodes.Pair:new({
-			Left = LeftParen,
-			Right = RightParen,
-		}),
+		Parens = UtilNodes.Pair:new(LeftParen, RightParen),
 	})
 end
 

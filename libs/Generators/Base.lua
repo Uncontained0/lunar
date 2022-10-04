@@ -57,13 +57,13 @@ end
 
 function Base:Expression(Expression)
 	if Expression == BaseNodes.Expression.Unary then
-		self:UnaryExpression(Expression)
+		return self:UnaryExpression(Expression.Value)
 	elseif Expression == BaseNodes.Expression.Paren then
-		self:ParenExpression(Expression)
+		return self:ParenExpression(Expression.Value)
 	elseif Expression == BaseNodes.Expression.Value then
-		self:ValueExpression(Expression)
+		return self:ValueExpression(Expression.Value)
 	elseif Expression == BaseNodes.Expression.Binary then
-		self:BinaryExpression(Expression)
+		return self:BinaryExpression(Expression.Value)
 	end
 
 	error("No match")
@@ -227,7 +227,7 @@ function Base:FunctionArgs(FunctionArgs)
 		local Output = self:Token(FunctionArgs.Parens.Left)
 
 		for _, v in ipairs(FunctionArgs.Arguments.Items) do
-			Output = Output .. self:Token(v.Item)
+			Output = Output .. self:Expression(v.Item)
 
 			if v.Separator then
 				Output = Output .. self:Token(v.Separator)
@@ -300,7 +300,7 @@ end
 function Base:LocalFunction(LocalFunction)
 	return self:Token(LocalFunction.Local)
 		.. self:Token(LocalFunction.Function)
-		.. self:Token(LocalFunction.Identifier)
+		.. self:Token(LocalFunction.Name)
 		.. self:FunctionBody(LocalFunction.Body)
 end
 
@@ -410,10 +410,6 @@ end
 
 function Base:Statement(Statement)
 	local Output
-
-	print(getmetatable(BaseNodes.Statement.LocalAssignment).__id)
-	print(getmetatable(BaseNodes.Statement.LocalAssignment({})).__id)
-	print(getmetatable(Statement).__id)
 
 	if Statement == BaseNodes.Statement.Assignment then
 		Output = self:Assignment(Statement.Value)
