@@ -5,6 +5,12 @@ Lunar tokenizes and parses lua code into an abstract syntax
 tree. This structure can be used for many purposes, like
 code analysis, code generation, or even code transformation.
 
+## Past Art
+
+Lunar is heavily inspired by [full moon](https://github.com/Kampfkarren/full-moon).
+Much of the logic is directly taken from full moon. If you
+know rust, I highly suggest you check it out.
+
 ## Usage
 
 This library can be installed via lit:
