@@ -418,15 +418,15 @@ end
 function Base:Repeat()
 	local Repeat = self:Symbol("Repeat")
 	table.insert(self.LoopStack, {})
-	local Block = self:Block()
+	local Body = self:Block()
 	local Breaks = table.remove(self.LoopStack)
 	local Until = self:Symbol("Until")
 	local Condition = self:Expression()
 
 	return BaseNodes.Repeat:new({
 		Repeat = Repeat,
-		Block = Block,
 		Body = Body,
+		Breaks = Breaks,
 		Until = Until,
 		Condition = Condition,
 	})
@@ -480,10 +480,7 @@ function Base:FunctionArgs()
 
 		return BaseNodes.FunctionArgs.Paren({
 			Arguments = Arguments,
-			Parens = UtilNodes.Pair:new({
-				Left = LeftParen,
-				Right = RightParen,
-			}),
+			Parens = UtilNodes.Pair:new(LeftParen, RightParen),
 		})
 	elseif self:Next("String") then
 		return BaseNodes.FunctionArgs.String(self:Consume())
@@ -576,10 +573,7 @@ function Base:FunctionBody()
 		Body = Body,
 		Returns = Returns,
 		End = End,
-		Parens = UtilNodes.Pair:new({
-			Left = LeftParen,
-			Right = RightParen,
-		}),
+		Parens = UtilNodes.Pair:new(LeftParen, RightParen),
 	})
 end
 
@@ -799,67 +793,119 @@ end
 function Base:Statement()
 	local Assignment = self:KeepGoing(self.Assignment)
 	if Assignment then
-		return BaseNodes.Statement.Assignment(Assignment)
+		if self:Next("Semicolon") then
+			return BaseNodes.Statement.Assignment({ Value = Assignment, Semicolon = self:Consume() })
+		else
+			return BaseNodes.Statement.Assignment(Assignment)
+		end
 	end
 
 	local Do = self:KeepGoing(self.Do)
 	if Do then
-		return BaseNodes.Statement.Do(Do)
+		if self:Next("Semicolon") then
+			return BaseNodes.Statement.Do({ Value = Do, Semicolon = self:Consume() })
+		else
+			return BaseNodes.Statement.Do(Do)
+		end
 	end
 
 	local FunctionCall = self:KeepGoing(self.FunctionCall)
 	if FunctionCall then
-		return BaseNodes.Statement.FunctionCall(FunctionCall)
+		if self:Next("Semicolon") then
+			return BaseNodes.Statement.FunctionCall({ Value = FunctionCall, Semicolon = self:Consume() })
+		else
+			return BaseNodes.Statement.FunctionCall(FunctionCall)
+		end
 	end
 
 	local FunctionDeclaration = self:KeepGoing(self.FunctionDeclaration)
 	if FunctionDeclaration then
-		return BaseNodes.Statement.FunctionDeclaration(FunctionDeclaration)
+		if self:Next("Semicolon") then
+			return BaseNodes.Statement.FunctionDeclaration({ Value = FunctionDeclaration, Semicolon = self:Consume() })
+		else
+			return BaseNodes.Statement.FunctionDeclaration(FunctionDeclaration)
+		end
 	end
 
 	local GenericFor = self:KeepGoing(self.GenericFor)
 	if GenericFor then
-		return BaseNodes.Statement.GenericFor(GenericFor)
+		if self:Next("Semicolon") then
+			return BaseNodes.Statement.GenericFor({ Value = GenericFor, Semicolon = self:Consume() })
+		else
+			return BaseNodes.Statement.GenericFor(GenericFor)
+		end
 	end
 
 	local If = self:KeepGoing(self.If)
 	if If then
-		return BaseNodes.Statement.If(If)
+		if self:Next("Semicolon") then
+			return BaseNodes.Statement.If({ Value = If, Semicolon = self:Consume() })
+		else
+			return BaseNodes.Statement.If(If)
+		end
 	end
 
 	local LocalAssignment = self:KeepGoing(self.LocalAssignment)
 	if LocalAssignment then
-		return BaseNodes.Statement.LocalAssignment(LocalAssignment)
+		if self:Next("Semicolon") then
+			return BaseNodes.Statement.LocalAssignment({ Value = LocalAssignment, Semicolon = self:Consume() })
+		else
+			return BaseNodes.Statement.LocalAssignment(LocalAssignment)
+		end
 	end
 
 	local LocalFunction = self:KeepGoing(self.LocalFunction)
 	if LocalFunction then
-		return BaseNodes.Statement.LocalFunction(LocalFunction)
+		if self:Next("Semicolon") then
+			return BaseNodes.Statement.LocalFunction({ Value = LocalFunction, Semicolon = self:Consume() })
+		else
+			return BaseNodes.Statement.LocalFunction(LocalFunction)
+		end
 	end
 
 	local NumericFor = self:KeepGoing(self.NumericFor)
 	if NumericFor then
-		return BaseNodes.Statement.NumericFor(NumericFor)
+		if self:Next("Semicolon") then
+			return BaseNodes.Statement.NumericFor({ Value = NumericFor, Semicolon = self:Consume() })
+		else
+			return BaseNodes.Statement.NumericFor(NumericFor)
+		end
 	end
 
 	local Repeat = self:KeepGoing(self.Repeat)
 	if Repeat then
-		return BaseNodes.Statement.Repeat(Repeat)
+		if self:Next("Semicolon") then
+			return BaseNodes.Statement.Repeat({ Value = Repeat, Semicolon = self:Consume() })
+		else
+			return BaseNodes.Statement.Repeat(Repeat)
+		end
 	end
 
 	local While = self:KeepGoing(self.While)
 	if While then
-		return BaseNodes.Statement.While(While)
+		if self:Next("Semicolon") then
+			return BaseNodes.Statement.While({ Value = While, Semicolon = self:Consume() })
+		else
+			return BaseNodes.Statement.While(While)
+		end
 	end
 
 	local Return = self:KeepGoing(self.Return)
 	if Return then
-		return BaseNodes.Statement.Return(Return)
+		if self:Next("Semicolon") then
+			return BaseNodes.Statement.Return({ Value = Return, Semicolon = self:Consume() })
+		else
+			return BaseNodes.Statement.Return(Return)
+		end
 	end
 
 	local Break = self:KeepGoing(self.Break)
 	if Break then
-		return BaseNodes.Statement.Break(Break)
+		if self:Next("Semicolon") then
+			return BaseNodes.Statement.Break({ Value = Break, Semicolon = self:Consume() })
+		else
+			return BaseNodes.Statement.Break(Break)
+		end
 	end
 
 	error(
