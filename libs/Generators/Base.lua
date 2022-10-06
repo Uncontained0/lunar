@@ -48,7 +48,7 @@ function Base:ParenExpression(Expression)
 end
 
 function Base:ValueExpression(Expression)
-	return self:Value(Expression)
+	return self:Value(Expression.Value)
 end
 
 function Base:BinaryExpression(Expression)
@@ -57,13 +57,13 @@ end
 
 function Base:Expression(Expression)
 	if Expression == BaseNodes.Expression.Unary then
-		return self:UnaryExpression(Expression.Value)
+		return self:UnaryExpression(Expression)
 	elseif Expression == BaseNodes.Expression.Paren then
-		return self:ParenExpression(Expression.Value)
+		return self:ParenExpression(Expression)
 	elseif Expression == BaseNodes.Expression.Value then
-		return self:ValueExpression(Expression.Value)
+		return self:ValueExpression(Expression)
 	elseif Expression == BaseNodes.Expression.Binary then
-		return self:BinaryExpression(Expression.Value)
+		return self:BinaryExpression(Expression)
 	end
 
 	error("No match")
@@ -246,8 +246,8 @@ end
 
 function Base:MethodCall(MethodCall)
 	return self:Token(MethodCall.Colon)
-		.. self:Token(MethodCall.Identifier)
-		.. self:FunctionArgs(MethodCall.FunctionArgs)
+		.. self:Token(MethodCall.Name)
+		.. self:FunctionArgs(MethodCall.Args)
 end
 
 function Base:Call(Call)

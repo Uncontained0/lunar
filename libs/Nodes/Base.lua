@@ -112,7 +112,7 @@ local MethodCall = Node.Node:extend()
 function MethodCall:initialize(Options)
 	self.Colon = Options.Colon
 	self.Name = Options.Name
-	self.Arguments = Options.Arguments
+	self.Args = Options.Args
 end
 
 local Call = Node.Enum:new({
