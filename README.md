@@ -1,5 +1,5 @@
 # Lunar
-**Luna Reader - A simple and extendable lua parser.**
+**A simple and extendable lua parser written in lua.**
 
 Lunar tokenizes and parses lua code into an abstract syntax
 tree. This structure can be used for many purposes, like
