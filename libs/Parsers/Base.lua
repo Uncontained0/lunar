@@ -55,13 +55,8 @@ end
 
 function Base:Parse()
 	self.TokenList.Position = 1
-	local Statements = {}
 
-	while self.TokenList:Peek() do
-		table.insert(Statements, self:Statement())
-	end
-
-	return Statements
+	return self:Block().Statements
 end
 
 function Base:Block()
@@ -74,6 +69,24 @@ function Base:Block()
 			table.insert(Statements, Statement)
 		else
 			break
+		end
+	end
+
+	local Return = self:KeepGoing(self.Return)
+	if Return then
+		if self:Next("Semicolon") then
+			table.insert(Statements, BaseNodes.Statement.Return({ Value = Return, Semicolon = self:Consume() }))
+		else
+			table.insert(Statements, BaseNodes.Statement.Return(Return))
+		end
+	end
+
+	local Break = self:KeepGoing(self.Break)
+	if Break then
+		if self:Next("Semicolon") then
+			table.insert(Statements, BaseNodes.Statement.Break({ Value = Break, Semicolon = self:Consume() }))
+		else
+			table.insert(Statements, BaseNodes.Statement.Break(Break))
 		end
 	end
 
@@ -887,24 +900,6 @@ function Base:Statement()
 			return BaseNodes.Statement.While({ Value = While, Semicolon = self:Consume() })
 		else
 			return BaseNodes.Statement.While(While)
-		end
-	end
-
-	local Return = self:KeepGoing(self.Return)
-	if Return then
-		if self:Next("Semicolon") then
-			return BaseNodes.Statement.Return({ Value = Return, Semicolon = self:Consume() })
-		else
-			return BaseNodes.Statement.Return(Return)
-		end
-	end
-
-	local Break = self:KeepGoing(self.Break)
-	if Break then
-		if self:Next("Semicolon") then
-			return BaseNodes.Statement.Break({ Value = Break, Semicolon = self:Consume() })
-		else
-			return BaseNodes.Statement.Break(Break)
 		end
 	end
 
