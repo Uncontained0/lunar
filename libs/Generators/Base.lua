@@ -56,13 +56,13 @@ function Base:BinaryExpression(Expression)
 end
 
 function Base:Expression(Expression)
-	if Expression == BaseNodes.Expression.Unary then
+	if Expression == BaseNodes.UnaryExpression then
 		return self:UnaryExpression(Expression)
-	elseif Expression == BaseNodes.Expression.Paren then
+	elseif Expression == BaseNodes.ParenExpression then
 		return self:ParenExpression(Expression)
-	elseif Expression == BaseNodes.Expression.Value then
+	elseif Expression == BaseNodes.ValueExpression then
 		return self:ValueExpression(Expression)
-	elseif Expression == BaseNodes.Expression.Binary then
+	elseif Expression == BaseNodes.BinaryExpression then
 		return self:BinaryExpression(Expression)
 	end
 
@@ -70,15 +70,15 @@ function Base:Expression(Expression)
 end
 
 function Base:Field(Field)
-	if Field == BaseNodes.Field.Bracket then
+	if Field == BaseNodes.BracketField then
 		return self:Token(Field.Brackets.Left)
 			.. self:Expression(Field.NameExpression)
 			.. self:Token(Field.Brackets.Right)
 			.. self:Token(Field.Equals)
 			.. self:Expression(Field.Expression)
-	elseif Field == BaseNodes.Field.Identifier then
+	elseif Field == BaseNodes.IdentifierField then
 		return self:Token(Field.Identifier) .. self:Token(Field.Equals) .. self:Expression(Field.Expression)
-	elseif Field == BaseNodes.Field.NoKey then
+	elseif Field == BaseNodes.NoKeyField then
 		return self:Expression(Field.Value)
 	end
 
@@ -100,11 +100,11 @@ function Base:Table(Table)
 end
 
 function Base:Index(Index)
-	if Index == BaseNodes.Index.Bracket then
+	if Index == BaseNodes.BracketIndex then
 		return self:Token(Index.Brackets.Left)
 			.. self:Expression(Index.Expression)
 			.. self:Token(Index.Brackets.Right)
-	elseif Index == BaseNodes.Index.Dot then
+	elseif Index == BaseNodes.DotIndex then
 		return self:Token(Index.Dot) .. self:Token(Index.Identifier)
 	end
 
@@ -112,17 +112,17 @@ function Base:Index(Index)
 end
 
 function Base:Value(Value)
-	if Value == BaseNodes.Value.Token then
+	if Value == BaseNodes.TokenValue then
 		return self:Token(Value.Value)
-	elseif Value == BaseNodes.Value.Function then
+	elseif Value == BaseNodes.FunctionValue then
 		return self:Function(Value.Value)
-	elseif Value == BaseNodes.Value.Table then
+	elseif Value == BaseNodes.TableValue then
 		return self:Table(Value.Value)
-	elseif Value == BaseNodes.Value.FunctionCall then
+	elseif Value == BaseNodes.FunctionCallValue then
 		return self:FunctionCall(Value.Value)
-	elseif Value == BaseNodes.Value.Var then
+	elseif Value == BaseNodes.VarValue then
 		return self:Var(Value.Value)
-	elseif Value == BaseNodes.Value.ParenExpression then
+	elseif Value == BaseNodes.ParenValue then
 		return self:ParenExpression(Value.Value)
 	end
 
@@ -223,7 +223,7 @@ function Base:Return(Return)
 end
 
 function Base:FunctionArgs(FunctionArgs)
-	if FunctionArgs == BaseNodes.FunctionArgs.Paren then
+	if FunctionArgs == BaseNodes.ParenFunctionArgs then
 		local Output = self:Token(FunctionArgs.Parens.Left)
 
 		for _, v in ipairs(FunctionArgs.Arguments.Items) do
@@ -235,9 +235,9 @@ function Base:FunctionArgs(FunctionArgs)
 		end
 
 		return Output .. self:Token(FunctionArgs.Parens.Right)
-	elseif FunctionArgs == BaseNodes.FunctionArgs.String then
+	elseif FunctionArgs == BaseNodes.StringFunctionArgs then
 		return self:Token(FunctionArgs.Value)
-	elseif FunctionArgs == BaseNodes.FunctionArgs.Table then
+	elseif FunctionArgs == BaseNodes.TableFunctionArgs then
 		return self:Table(FunctionArgs.Value)
 	end
 
@@ -251,9 +251,9 @@ function Base:MethodCall(MethodCall)
 end
 
 function Base:Call(Call)
-	if Call == BaseNodes.Call.FunctionArgs then
+	if Call == BaseNodes.FunctionArgsCall then
 		return self:FunctionArgs(Call.Value)
-	elseif Call == BaseNodes.Call.MethodCall then
+	elseif Call == BaseNodes.MethodCallCall then
 		return self:MethodCall(Call.Value)
 	end
 
@@ -261,9 +261,9 @@ function Base:Call(Call)
 end
 
 function Base:Prefix(Prefix)
-	if Prefix == BaseNodes.Prefix.ParenExpression then
+	if Prefix == BaseNodes.ParenPrefix then
 		return self:ParenExpression(Prefix.Value)
-	elseif Prefix == BaseNodes.Prefix.Identifier then
+	elseif Prefix == BaseNodes.IdentifierPrefix then
 		return self:Token(Prefix.Value)
 	end
 
@@ -271,9 +271,9 @@ function Base:Prefix(Prefix)
 end
 
 function Base:Suffix(Suffix)
-	if Suffix == BaseNodes.Suffix.Call then
+	if Suffix == BaseNodes.CallSuffix then
 		return self:Call(Suffix.Value)
-	elseif Suffix == BaseNodes.Suffix.Index then
+	elseif Suffix == BaseNodes.IndexSuffix then
 		return self:Index(Suffix.Value)
 	end
 
@@ -345,9 +345,9 @@ function Base:VarExpression(VarExpression)
 end
 
 function Base:Var(Var)
-	if Var == BaseNodes.Var.VarExpression then
+	if Var == BaseNodes.VarExpressionVar then
 		return self:VarExpression(Var.Value)
-	elseif Var == BaseNodes.Var.Identifier then
+	elseif Var == BaseNodes.IdentifierVar then
 		return self:Token(Var.Value)
 	end
 
@@ -411,31 +411,31 @@ end
 function Base:Statement(Statement)
 	local Output
 
-	if Statement == BaseNodes.Statement.Assignment then
+	if Statement == BaseNodes.AssignmentStatement then
 		Output = self:Assignment(Statement.Value)
-	elseif Statement == BaseNodes.Statement.Do then
+	elseif Statement == BaseNodes.DoStatement then
 		Output = self:Do(Statement.Value)
-	elseif Statement == BaseNodes.Statement.FunctionCall then
+	elseif Statement == BaseNodes.FunctionCallStatement then
 		Output = self:FunctionCall(Statement.Value)
-	elseif Statement == BaseNodes.Statement.FunctionDeclaration then
+	elseif Statement == BaseNodes.FunctionDeclarationStatement then
 		Output = self:FunctionDeclaration(Statement.Value)
-	elseif Statement == BaseNodes.Statement.GenericFor then
+	elseif Statement == BaseNodes.GenericForStatement then
 		Output = self:GenericFor(Statement.Value)
-	elseif Statement == BaseNodes.Statement.If then
+	elseif Statement == BaseNodes.IfStatement then
 		Output = self:If(Statement.Value)
-	elseif Statement == BaseNodes.Statement.LocalAssignment then
+	elseif Statement == BaseNodes.LocalAssignmentStatement then
 		Output = self:LocalAssignment(Statement.Value)
-	elseif Statement == BaseNodes.Statement.LocalFunction then
+	elseif Statement == BaseNodes.LocalFunctionStatement then
 		Output = self:LocalFunction(Statement.Value)
-	elseif Statement == BaseNodes.Statement.NumericFor then
+	elseif Statement == BaseNodes.NumericForStatement then
 		Output = self:NumericFor(Statement.Value)
-	elseif Statement == BaseNodes.Statement.Repeat then
+	elseif Statement == BaseNodes.RepeatStatement then
 		Output = self:Repeat(Statement.Value)
-	elseif Statement == BaseNodes.Statement.While then
+	elseif Statement == BaseNodes.WhileStatement then
 		Output = self:While(Statement.Value)
-	elseif Statement == BaseNodes.Statement.Return then
+	elseif Statement == BaseNodes.ReturnStatement then
 		Output = self:Return(Statement.Value)
-	elseif Statement == BaseNodes.Statement.Break then
+	elseif Statement == BaseNodes.BreakStatement then
 		Output = self:Break(Statement.Value)
 	end
 

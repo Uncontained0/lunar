@@ -1,13 +1,13 @@
 local Node = require("Nodes/Node")
 
-local Pair = Node.Node:extend()
+local Pair = Node:extend()
 
 function Pair:initialize(Left, Right)
 	self.Left = Left
 	self.Right = Right
 end
 
-local Punctuated = Node.Node:extend()
+local Punctuated = Node:extend()
 
 function Punctuated:initialize()
 	self.Items = {}

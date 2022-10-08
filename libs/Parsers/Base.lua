@@ -75,18 +75,18 @@ function Base:Block()
 	local Return = self:KeepGoing(self.Return)
 	if Return then
 		if self:Next("Semicolon") then
-			table.insert(Statements, BaseNodes.Statement.Return({ Value = Return, Semicolon = self:Consume() }))
+			table.insert(Statements, BaseNodes.ReturnStatement:new({ Value = Return, Semicolon = self:Consume() }))
 		else
-			table.insert(Statements, BaseNodes.Statement.Return(Return))
+			table.insert(Statements, BaseNodes.ReturnStatement:new(Return))
 		end
 	end
 
 	local Break = self:KeepGoing(self.Break)
 	if Break then
 		if self:Next("Semicolon") then
-			table.insert(Statements, BaseNodes.Statement.Break({ Value = Break, Semicolon = self:Consume() }))
+			table.insert(Statements, BaseNodes.BreakStatement:new({ Value = Break, Semicolon = self:Consume() }))
 		else
-			table.insert(Statements, BaseNodes.Statement.Break(Break))
+			table.insert(Statements, BaseNodes.BreakStatement:new(Break))
 		end
 	end
 
@@ -94,7 +94,7 @@ function Base:Block()
 end
 
 function Base:UnaryExpression()
-	return BaseNodes.Expression.Unary({
+	return BaseNodes.UnaryExpression:new({
 		Operator = self:Symbol(unpack(UNARY_OPS)),
 		Expression = self:Expression(7),
 	})
@@ -105,14 +105,14 @@ function Base:ParenExpression()
 	local Expression = self:Expression()
 	local RightParen = self:Symbol("RightParen")
 
-	return BaseNodes.Expression.Paren({
+	return BaseNodes.ParenExpression:new({
 		Parens = UtilNodes.Pair:new(LeftParen, RightParen),
 		Expression = Expression,
 	})
 end
 
 function Base:ValueExpression()
-	return BaseNodes.Expression.Value(self:Value())
+	return BaseNodes.ValueExpression:new(self:Value())
 end
 
 function Base:PartExpression()
@@ -153,7 +153,7 @@ function Base:Expression(Precedence)
 			NextPrecedence = Precedence
 		end
 
-		CurrentExpression = BaseNodes.Expression.Binary({
+		CurrentExpression = BaseNodes.BinaryExpression:new({
 			Left = CurrentExpression,
 			Operator = Operator,
 			Right = self:Expression(NextPrecedence),
@@ -171,14 +171,14 @@ function Base:Field()
 		local Equals = self:Symbol("Equals")
 		local Expression = self:Expression()
 
-		return BaseNodes.Field.Bracket({
+		return BaseNodes.BracketField:new({
 			Brackets = UtilNodes.Pair:new(LeftBracket, RightBracket),
 			NameExpression = NameExpression,
 			Equals = Equals,
 			Expression = Expression,
 		})
 	elseif self:Next("Identifier") then
-		return BaseNodes.Field.Identifier({
+		return BaseNodes.IdentifierField:new({
 			Identifier = self:Consume(),
 			Equals = self:Symbol("Equals"),
 			Expression = self:Expression(),
@@ -187,7 +187,7 @@ function Base:Field()
 
 	local Expression = self:KeepGoing(self.Expression)
 	if Expression then
-		return BaseNodes.Field.NoKey(Expression)
+		return BaseNodes.NoKeyField:new(Expression)
 	end
 
 	error("No match")
@@ -224,7 +224,7 @@ function Base:Index()
 		local Expression = self:Expression()
 		local RightBracket = self:Symbol("RightBracket")
 
-		return BaseNodes.Index.Bracket({
+		return BaseNodes.BracketIndex:new({
 			Brackets = UtilNodes.Pair:new(LeftBracket, RightBracket),
 			Expression = Expression,
 		})
@@ -232,7 +232,7 @@ function Base:Index()
 		local Dot = self:Consume()
 		local Identifier = self:Symbol("Identifier")
 
-		return BaseNodes.Index.Dot({
+		return BaseNodes.DotIndex:new({
 			Dot = Dot,
 			Identifier = Identifier,
 		})
@@ -243,32 +243,32 @@ end
 
 function Base:Value()
 	if self:Next("Nil", "True", "False", "Number", "String", "Ellipse") then
-		return BaseNodes.Value.Token(self:Consume())
+		return BaseNodes.TokenValue:new(self:Consume())
 	end
 
 	local Function = self:KeepGoing(self.Function)
 	if Function then
-		return BaseNodes.Value.Function(Function)
+		return BaseNodes.FunctionValue:new(Function)
 	end
 
 	local Table = self:KeepGoing(self.Table)
 	if Table then
-		return BaseNodes.Value.Table(Table)
+		return BaseNodes.TableValue:new(Table)
 	end
 
 	local FunctionCall = self:KeepGoing(self.FunctionCall)
 	if FunctionCall then
-		return BaseNodes.Value.FunctionCall(FunctionCall)
+		return BaseNodes.FunctionCallValue:new(FunctionCall)
 	end
 
 	local Var = self:KeepGoing(self.Var)
 	if Var then
-		return BaseNodes.Value.Var(Var)
+		return BaseNodes.VarValue:new(Var)
 	end
 
 	local ParenExpression = self:KeepGoing(self.ParenExpression)
 	if ParenExpression then
-		return BaseNodes.Value.Paren(ParenExpression)
+		return BaseNodes.ParenValue:new(ParenExpression)
 	end
 
 	error("No match")
@@ -294,7 +294,7 @@ function Base:NumericFor()
 	local Breaks = table.remove(self.LoopStack)
 	local End = self:Symbol("End")
 
-	return BaseNodes.For.Numeric({
+	return BaseNodes.NumericFor:new({
 		For = For,
 		Identifier = Identifier,
 		Equals = Equals,
@@ -345,7 +345,7 @@ function Base:GenericFor()
 	local Breaks = table.remove(self.LoopStack)
 	local End = self:Symbol("End")
 
-	return BaseNodes.For.Generic({
+	return BaseNodes.GenericFor:new({
 		For = For,
 		Identifiers = Identifiers,
 		In = In,
@@ -491,17 +491,17 @@ function Base:FunctionArgs()
 
 		local RightParen = self:Symbol("RightParen")
 
-		return BaseNodes.FunctionArgs.Paren({
+		return BaseNodes.ParenFunctionArgs:new({
 			Arguments = Arguments,
 			Parens = UtilNodes.Pair:new(LeftParen, RightParen),
 		})
 	elseif self:Next("String") then
-		return BaseNodes.FunctionArgs.String(self:Consume())
+		return BaseNodes.StringFunctionArgs:new(self:Consume())
 	end
 
 	local Table = self:KeepGoing(self.Table)
 	if Table then
-		return BaseNodes.FunctionArgs.Table(Table)
+		return BaseNodes.TableFunctionArgs:new(Table)
 	end
 
 	error("No match")
@@ -522,12 +522,12 @@ end
 function Base:Call()
 	local FunctionArgs = self:KeepGoing(self.FunctionArgs)
 	if FunctionArgs then
-		return BaseNodes.Call.FunctionArgs(FunctionArgs)
+		return BaseNodes.FunctionArgsCall:new(FunctionArgs)
 	end
 
 	local MethodCall = self:KeepGoing(self.MethodCall)
 	if MethodCall then
-		return BaseNodes.Call.MethodCall(MethodCall)
+		return BaseNodes.MethodCallCall:new(MethodCall)
 	end
 
 	error("No match")
@@ -536,11 +536,11 @@ end
 function Base:Prefix()
 	local ParenExpression = self:KeepGoing(self.ParenExpression)
 	if ParenExpression then
-		return BaseNodes.Prefix.ParenExpression(ParenExpression)
+		return BaseNodes.ParenPrefix:new(ParenExpression)
 	end
 
 	if self:Next("Identifier") then
-		return BaseNodes.Prefix.Identifier(self:Consume())
+		return BaseNodes.IdentifierPrefix:new(self:Consume())
 	end
 
 	error("No match")
@@ -549,12 +549,12 @@ end
 function Base:Suffix()
 	local Call = self:KeepGoing(self.Call)
 	if Call then
-		return BaseNodes.Suffix.Call(Call)
+		return BaseNodes.CallSuffix:new(Call)
 	end
 
 	local Index = self:KeepGoing(self.Index)
 	if Index then
-		return BaseNodes.Suffix.Index(Index)
+		return BaseNodes.IndexSuffix:new(Index)
 	end
 
 	error("No match")
@@ -669,7 +669,7 @@ function Base:FunctionCall()
 		end
 	end
 
-	assert(Suffixes[#Suffixes] == BaseNodes.Suffix.Call, "No match")
+	assert(Suffixes[#Suffixes] == BaseNodes.CallSuffix, "No match")
 
 	return BaseNodes.FunctionCall:new({
 		Prefix = Prefix,
@@ -691,7 +691,7 @@ function Base:VarExpression()
 		end
 	end
 
-	assert(BaseNodes.Suffix.Index == Suffixes[#Suffixes], "No match")
+	assert(BaseNodes.IndexSuffix == Suffixes[#Suffixes], "No match")
 
 	return BaseNodes.VarExpression:new({
 		Prefix = Prefix,
@@ -702,11 +702,11 @@ end
 function Base:Var()
 	local VarExpression = self:KeepGoing(self.VarExpression)
 	if VarExpression then
-		return BaseNodes.Var.VarExpression(VarExpression)
+		return BaseNodes.VarExpressionVar:new(VarExpression)
 	end
 
 	if self:Next("Identifier") then
-		return BaseNodes.Var.Identifier(self:Consume())
+		return BaseNodes.IdentifierVar:new(self:Consume())
 	end
 
 	error("No match")
@@ -807,99 +807,99 @@ function Base:Statement()
 	local Assignment = self:KeepGoing(self.Assignment)
 	if Assignment then
 		if self:Next("Semicolon") then
-			return BaseNodes.Statement.Assignment({ Value = Assignment, Semicolon = self:Consume() })
+			return BaseNodes.AssignmentStatement:new({ Value = Assignment, Semicolon = self:Consume() })
 		else
-			return BaseNodes.Statement.Assignment(Assignment)
+			return BaseNodes.AssignmentStatement:new(Assignment)
 		end
 	end
 
 	local Do = self:KeepGoing(self.Do)
 	if Do then
 		if self:Next("Semicolon") then
-			return BaseNodes.Statement.Do({ Value = Do, Semicolon = self:Consume() })
+			return BaseNodes.DoStatement:new({ Value = Do, Semicolon = self:Consume() })
 		else
-			return BaseNodes.Statement.Do(Do)
+			return BaseNodes.DoStatement:new(Do)
 		end
 	end
 
 	local FunctionCall = self:KeepGoing(self.FunctionCall)
 	if FunctionCall then
 		if self:Next("Semicolon") then
-			return BaseNodes.Statement.FunctionCall({ Value = FunctionCall, Semicolon = self:Consume() })
+			return BaseNodes.FunctionCallStatement:new({ Value = FunctionCall, Semicolon = self:Consume() })
 		else
-			return BaseNodes.Statement.FunctionCall(FunctionCall)
+			return BaseNodes.FunctionCallStatement:new(FunctionCall)
 		end
 	end
 
 	local FunctionDeclaration = self:KeepGoing(self.FunctionDeclaration)
 	if FunctionDeclaration then
 		if self:Next("Semicolon") then
-			return BaseNodes.Statement.FunctionDeclaration({ Value = FunctionDeclaration, Semicolon = self:Consume() })
+			return BaseNodes.FunctionDeclarationStatement:new({ Value = FunctionDeclaration, Semicolon = self:Consume() })
 		else
-			return BaseNodes.Statement.FunctionDeclaration(FunctionDeclaration)
+			return BaseNodes.FunctionDeclarationStatement:new(FunctionDeclaration)
 		end
 	end
 
 	local GenericFor = self:KeepGoing(self.GenericFor)
 	if GenericFor then
 		if self:Next("Semicolon") then
-			return BaseNodes.Statement.GenericFor({ Value = GenericFor, Semicolon = self:Consume() })
+			return BaseNodes.GenericForStatement:new({ Value = GenericFor, Semicolon = self:Consume() })
 		else
-			return BaseNodes.Statement.GenericFor(GenericFor)
+			return BaseNodes.GenericForStatement:new(GenericFor)
 		end
 	end
 
 	local If = self:KeepGoing(self.If)
 	if If then
 		if self:Next("Semicolon") then
-			return BaseNodes.Statement.If({ Value = If, Semicolon = self:Consume() })
+			return BaseNodes.IfStatement:new({ Value = If, Semicolon = self:Consume() })
 		else
-			return BaseNodes.Statement.If(If)
+			return BaseNodes.IfStatement:new(If)
 		end
 	end
 
 	local LocalAssignment = self:KeepGoing(self.LocalAssignment)
 	if LocalAssignment then
 		if self:Next("Semicolon") then
-			return BaseNodes.Statement.LocalAssignment({ Value = LocalAssignment, Semicolon = self:Consume() })
+			return BaseNodes.LocalAssignmentStatement:new({ Value = LocalAssignment, Semicolon = self:Consume() })
 		else
-			return BaseNodes.Statement.LocalAssignment(LocalAssignment)
+			return BaseNodes.LocalAssignmentStatement:new(LocalAssignment)
 		end
 	end
 
 	local LocalFunction = self:KeepGoing(self.LocalFunction)
 	if LocalFunction then
 		if self:Next("Semicolon") then
-			return BaseNodes.Statement.LocalFunction({ Value = LocalFunction, Semicolon = self:Consume() })
+			return BaseNodes.LocalFunctionStatement:new({ Value = LocalFunction, Semicolon = self:Consume() })
 		else
-			return BaseNodes.Statement.LocalFunction(LocalFunction)
+			return BaseNodes.LocalFunctionStatement:new(LocalFunction)
 		end
 	end
 
 	local NumericFor = self:KeepGoing(self.NumericFor)
 	if NumericFor then
 		if self:Next("Semicolon") then
-			return BaseNodes.Statement.NumericFor({ Value = NumericFor, Semicolon = self:Consume() })
+			return BaseNodes.NumericForStatement:new({ Value = NumericFor, Semicolon = self:Consume() })
 		else
-			return BaseNodes.Statement.NumericFor(NumericFor)
+			return BaseNodes.NumericForStatement:new(NumericFor)
 		end
 	end
 
 	local Repeat = self:KeepGoing(self.Repeat)
 	if Repeat then
 		if self:Next("Semicolon") then
-			return BaseNodes.Statement.Repeat({ Value = Repeat, Semicolon = self:Consume() })
+			return BaseNodes.RepeatStatement:new({ Value = Repeat, Semicolon = self:Consume() })
 		else
-			return BaseNodes.Statement.Repeat(Repeat)
+			return BaseNodes.RepeatStatement:new(Repeat)
 		end
 	end
 
 	local While = self:KeepGoing(self.While)
 	if While then
 		if self:Next("Semicolon") then
-			return BaseNodes.Statement.While({ Value = While, Semicolon = self:Consume() })
+			return BaseNodes.WhileStatement:new({ Value = While, Semicolon = self:Consume() })
 		else
-			return BaseNodes.Statement.While(While)
+			return BaseNodes.WhileStatement:new(While)
 		end
 	end
 

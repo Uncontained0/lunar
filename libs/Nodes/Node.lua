@@ -1,19 +1,11 @@
 local Object = require("core").Object
 
-local Node = {}
+local Node = Object:extend()
 
-Node.EnumValue = Object:extend()
+Node.NodeType = "None"
 
-Node.EnumValue.meta.__eq = function(self, Other)
-	return self.EnumValueId ~= nil and self.EnumValueId == Other.EnumValueId
-end
-
-Node.EnumValue.meta.__call = function(self, Values)
-	return Node.EnumValue:new(self.EnumValueId, Values)
-end
-
-function Node.EnumValue:initialize(Identifier, Values)
-	self.EnumValueId = Identifier
+function Node:initialize(Values)
+	self.NodeType = self.NodeType
 
 	if Values == nil then
 		return
@@ -26,18 +18,14 @@ function Node.EnumValue:initialize(Identifier, Values)
 	end
 end
 
-Node.Enum = Object:extend()
-
-local Id = 0
-
-function Node.Enum:initialize(Options)
-	for _, v in pairs(Options) do
-		Id = Id + 1
-
-		self[v] = Node.EnumValue:new(Id)
-	end
+function Node.meta.__eq(self, other)
+	return self.NodeType == other.NodeType
 end
 
-Node.Node = Object:extend()
+function Node.QuickExtend(NodeType)
+	local NewNode = Node:extend()
+	NewNode.NodeType = NodeType
+	return NewNode
+end
 
 return Node
